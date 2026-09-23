@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جرد المحل - Shop Inventory</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- شريط العلوي (Header) -->
+        <header class="app-header">
+            <div class="header-title">
+                <h1 id="page-title">جرد المحل</h1>
+            </div>
+            <div class="header-actions">
+                <button id="lang-toggle-btn" class="icon-btn" title="تغيير اللغة"><i class="fa-solid fa-globe"></i></button>
+                <button id="theme-toggle-btn" class="icon-btn" title="الوضع الداكن"><i class="fa-solid fa-moon"></i></button>
+                <button id="settings-btn" class="icon-btn" title="الإعدادات"><i class="fa-solid fa-gear"></i></button>
+            </div>
+        </header>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="app-main">
+            <!-- صفحة الرئيسية / لوحة التحكم والأصناف -->
+            <section id="view-home" class="view active">
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <span class="stat-num" id="stat-total">0</span>
+                        <span class="stat-label" data-i18n="total_items">إجمالي الأصناف</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-num" id="stat-counted">0</span>
+                        <span class="stat-label" data-i18n="counted_items">تم جردها</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-num" id="stat-uncounted">0</span>
+                        <span class="stat-label" data-i18n="uncounted_items">لم تُجرد</span>
+                    </div>
+                    <div class="stat-card warning">
+                        <span class="stat-num" id="stat-shortage">0</span>
+                        <span class="stat-label" data-i18n="shortage_items">نقص</span>
+                    </div>
+                    <div class="stat-card success">
+                        <span class="stat-num" id="stat-surplus">0</span>
+                        <span class="stat-label" data-i18n="surplus_items">زيادة</span>
+                    </div>
+                </div>
+
+                <div class="search-filter-bar">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="home-search" placeholder="بحث سريع عن صنف..." data-i18n-placeholder="search_placeholder">
+                    </div>
+                </div>
+
+                <div class="items-list-container">
+                    <div id="home-items-list" class="items-grid">
+                        <!-- تضاف البطاقات هنا برمجياً -->
+                    </div>
+                    <div id="home-empty" class="empty-state" style="display: none;">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                        <p data-i18n="no_items_found">لا توجد أصناف مضافة حالياً</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- صفحة إدارة الأصناف -->
+            <section id="view-products" class="view">
+                <div class="search-filter-bar">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="products-search" placeholder="بحث في الأصناف..." data-i18n-placeholder="search_products">
+                    </div>
+                    <button class="btn-primary" id="add-product-inline-btn"><i class="fa-solid fa-plus"></i> <span data-i18n="add_item">إضافة صنف</span></button>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="item_name">اسم الصنف</th>
+                                <th data-i18n="item_qty">الكمية المسجلة</th>
+                                <th data-i18n="item_unit">الوحدة</th>
+                                <th data-i18n="actions">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table-body">
+                            <!-- الصفوف -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- صفحة نظام الجرد (شاشة العد السريع) -->
+            <section id="view-inventory" class="view">
+                <div class="inventory-controls">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="inventory-search" placeholder="بحث لجرد الصنف..." data-i18n-placeholder="search_inventory">
+                    </div>
+                    <div class="filter-chips">
+                        <button class="chip active" data-filter="all" data-i18n="filter_all">الكل</button>
+                        <button class="chip" data-filter="counted" data-i18n="filter_counted">تم الجرد</button>
+                        <button class="chip" data-filter="uncounted" data-i18n="filter_uncounted">لم يُجرد</button>
+                        <button class="chip" data-filter="shortage" data-i18n="filter_shortage">نقص</button>
+                        <button class="chip" data-filter="surplus" data-i18n="filter_surplus">زيادة</button>
+                        <button class="chip" data-filter="matched" data-i18n="filter_matched">مطابق</button>
+                    </div>
+                </div>
+
+                <div class="inventory-list" id="inventory-items-list">
+                    <!-- عناصر الجرد التفاعلية السريعة -->
+                </div>
+
+                <div class="inventory-footer-action">
+                    <button id="save-inventory-session-btn" class="btn-success-lg"><i class="fa-solid fa-floppy-disk"></i> <span data-i18n="save_inventory">حفظ الجرد النهائي</span></button>
+                </div>
+            </section>
+
+            <!-- صفحة سجل الجرد -->
+            <section id="view-history" class="view">
+                <div id="history-list" class="history-list">
+                    <!-- سجلات الجرد -->
+                </div>
+                <div id="history-empty" class="empty-state" style="display: none;">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <p data-i18n="no_history">لا يوجد سجل عمليات جرد سابقة</p>
+                </div>
+            </section>
+
+            <!-- صفحة الإعدادات والنسخ الاحتياطي -->
+            <section id="view-settings" class="view">
+                <div class="settings-card">
+                    <h3 data-i18n="backup_restore">النسخ الاحتياطي والاستعادة</h3>
+                    <p data-i18n="backup_desc">حفظ نسخة احتياطية من جميع الأصناف والسجلات واستعادتها في أي وقت.</p>
+                    <div class="settings-actions">
+                        <button id="export-backup-btn" class="btn-outline"><i class="fa-solid fa-download"></i> <span data-i18n="export_btn">تصدير نسخة احتياطية (JSON)</span></button>
+                        <label for="import-file-input" class="btn-outline file-label">
+                            <i class="fa-solid fa-upload"></i> <span data-i18n="import_btn">استيراد نسخة احتياطية</span>
+                        </label>
+                        <input type="file" id="import-file-input" accept=".json" style="display: none;">
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- زر FAB عائم -->
+        <div class="fab-container">
+            <div id="fab-menu" class="fab-menu">
+                <button class="fab-item" data-action="add-product"><i class="fa-solid fa-plus"></i> <span data-i18n="add_item">إضافة صنف</span></button>
+                <button class="fab-item" data-action="start-inventory"><i class="fa-solid fa-clipboard-check"></i> <span data-i18n="start_inventory">بدء الجرد</span></button>
+                <button class="fab-item" data-action="view-products"><i class="fa-solid fa-boxes-stacked"></i> <span data-i18n="items_list">الأصناف</span></button>
+                <button class="fab-item" data-action="view-history"><i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="inventory_history">سجل الجرد</span></button>
+            </div>
+            <button id="fab-main" class="fab-main" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+        </div>
+
+        <!-- شريط التنقل السفلي السريع -->
+        <nav class="app-nav">
+            <button class="nav-item active" data-target="view-home"><i class="fa-solid fa-house"></i><span data-i18n="nav_home">الرئيسية</span></button>
+            <button class="nav-item" data-target="view-inventory"><i class="fa-solid fa-clipboard-check"></i><span data-i18n="nav_inventory">الجرد</span></button>
+            <button class="nav-item" data-target="view-products"><i class="fa-solid fa-boxes-stacked"></i><span data-i18n="nav_products">الأصناف</span></button>
+            <button class="nav-item" data-target="view-history"><i class="fa-solid fa-clock-rotate-left"></i><span data-i18n="nav_history">السجل</span></button>
+        </nav>
+    </div>
+
+    <!-- نافذة منبثقة (Modal) لإضافة/تعديل صنف -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title" data-i18n="add_new_item">إضافة صنف جديد</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+                <div class="form-group">
+                    <label data-i18n="item_name">اسم الصنف</label>
+                    <input type="text" id="product-name" required placeholder="أدخل اسم الصنف...">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="item_qty">الكمية المسجلة</label>
+                    <input type="number" id="product-quantity" step="any" min="0" value="0" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="item_unit">الوحدة</label>
+                    <select id="product-unit-select">
+                        <option value="حبة">حبة</option>
+                        <option value="كرتون">كرتون</option>
+                        <option value="علبة">علبة</option>
+                        <option value="كيس">كيس</option>
+                        <option value="كيلو">كيلو</option>
+                        <option value="لتر">لتر</option>
+                        <option value="حزمة">حزمة</option>
+                        <option value="أخرى" data-i18n="unit_other">أخرى</option>
+                    </select>
+                    <input type="text" id="product-unit-custom" placeholder="اكتب الوحدة هنا..." style="display: none; margin-top: 8px;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary close-modal" data-i18n="cancel">إلغاء</button>
+                    <button type="submit" class="btn-primary" data-i18n="save">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة تفاصيل الجرد أو تأكيد الحفظ -->
+    <div id="generic-modal" class="modal">
+        <div class="modal-content" id="generic-modal-body">
+            <!-- محتوى ديناميكي -->
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
