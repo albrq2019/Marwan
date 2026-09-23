@@ -6,8 +6,11 @@
     <title>جرد المحل - Store Inventory PWA</title>
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#3b82f6">
-    <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <!-- Inline Web App Manifest -->
+    <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"تطبيق جرد المحل","short_name":"جرد المحل","start_url":"index.html","display":"standalone","background_color":"%23111827","theme_color":"%233b82f6"}'>
+
     <!-- Tailwind CSS Stable CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -67,32 +70,36 @@
                     <i class="fa-solid fa-search absolute right-3.5 top-3.5 text-gray-400"></i>
                     <input type="text" id="home-search" oninput="filterHomeProducts()" placeholder="بحث سريع عن صنف..." class="w-full pr-10 pl-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <!-- Stats Grid -->
+                <!-- Stats Grid (Clickable Filters) -->
                 <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-2 text-center">
-                    <div class="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-xl">
+                    <div onclick="filterHomeByStatus('all')" class="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-xl cursor-pointer hover:opacity-80 transition-opacity">
                         <span class="block text-xs text-blue-600 dark:text-blue-400 font-medium">الإجمالي</span>
                         <span id="stat-total" class="text-lg font-bold">0</span>
                     </div>
-                    <div class="bg-green-50 dark:bg-green-900/30 p-2 rounded-xl">
+                    <div onclick="filterHomeByStatus('inventoried')" class="bg-green-50 dark:bg-green-900/30 p-2 rounded-xl cursor-pointer hover:opacity-80 transition-opacity">
                         <span class="block text-xs text-green-600 dark:text-green-400 font-medium">تم الجرد</span>
                         <span id="stat-inventoried" class="text-lg font-bold">0</span>
                     </div>
-                    <div class="bg-orange-50 dark:bg-orange-900/30 p-2 rounded-xl">
+                    <div onclick="filterHomeByStatus('uninventoried')" class="bg-orange-50 dark:bg-orange-900/30 p-2 rounded-xl cursor-pointer hover:opacity-80 transition-opacity">
                         <span class="block text-xs text-orange-600 dark:text-orange-400 font-medium">غير مجرود</span>
                         <span id="stat-uninventoried" class="text-lg font-bold">0</span>
                     </div>
-                    <div class="bg-purple-50 dark:bg-purple-900/30 p-2 rounded-xl">
+                    <div onclick="filterHomeByStatus('matched')" class="bg-purple-50 dark:bg-purple-900/30 p-2 rounded-xl cursor-pointer hover:opacity-80 transition-opacity">
                         <span class="block text-xs text-purple-600 dark:text-purple-400 font-medium">مطابق</span>
                         <span id="stat-matched" class="text-lg font-bold">0</span>
                     </div>
-                    <div class="bg-red-50 dark:bg-red-900/30 p-2 rounded-xl">
+                    <div onclick="filterHomeByStatus('shortage')" class="bg-red-50 dark:bg-red-900/30 p-2 rounded-xl cursor-pointer hover:opacity-80 transition-opacity border-2 border-red-300 dark:border-red-700">
                         <span class="block text-xs text-red-600 dark:text-red-400 font-medium">نقص</span>
                         <span id="stat-shortage" class="text-lg font-bold">0</span>
                     </div>
-                    <div class="bg-amber-50 dark:bg-amber-900/30 p-2 rounded-xl">
+                    <div onclick="filterHomeByStatus('surplus')" class="bg-amber-50 dark:bg-amber-900/30 p-2 rounded-xl cursor-pointer hover:opacity-80 transition-opacity">
                         <span class="block text-xs text-amber-600 dark:text-amber-400 font-medium">زيادة</span>
                         <span id="stat-surplus" class="text-lg font-bold">0</span>
                     </div>
+                </div>
+                <div id="active-filter-banner" class="hidden flex justify-between items-center bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 px-3 py-1.5 rounded-xl text-xs font-semibold">
+                    <span id="filter-banner-text">عرض الفلتر النشط</span>
+                    <button onclick="filterHomeByStatus('all')" class="underline hover:text-blue-900">إلغاء الفلتر</button>
                 </div>
             </div>
 
@@ -264,6 +271,7 @@
         const DB_NAME = "StoreInventoryDB";
         const DB_VERSION = 1;
         let db = null;
+        let activeHomeFilter = 'all';
 
         function initDB() {
             return new Promise((resolve, reject) => {
@@ -341,6 +349,27 @@
             icon.classList.toggle('rotate-45');
         }
 
+        function filterHomeByStatus(status) {
+            activeHomeFilter = status;
+            const banner = document.getElementById('active-filter-banner');
+            const bannerText = document.getElementById('filter-banner-text');
+            
+            if (status === 'all') {
+                banner.classList.add('hidden');
+            } else {
+                banner.classList.remove('hidden');
+                const names = {
+                    'inventoried': 'تم جردها',
+                    'uninventoried': 'لم يتم جردها',
+                    'matched': 'المطابقة',
+                    'shortage': 'التي فيها نقص',
+                    'surplus': 'التي فيها زيادة'
+                };
+                bannerText.textContent = `عرض الأصناف: ${names[status] || status}`;
+            }
+            loadHomeData();
+        }
+
         async function loadHomeData() {
             const products = await dbTransaction('products', 'readonly', store => store.getAll());
             const sessions = await dbTransaction('inventorySessions', 'readonly', store => store.getAll());
@@ -383,9 +412,25 @@
             const searchTerm = document.getElementById('home-search').value.toLowerCase();
             container.innerHTML = '';
 
-            const filtered = products.filter(p => p.name.toLowerCase().includes(searchTerm));
+            const filtered = products.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(searchTerm);
+                if (!matchesSearch) return false;
+
+                const item = sessionItemsMap[p.id];
+                const isInventoried = item && item.actualQuantity !== null && item.actualQuantity !== undefined;
+                const diff = isInventoried ? item.difference : 0;
+
+                if (activeHomeFilter === 'inventoried' && !isInventoried) return false;
+                if (activeHomeFilter === 'uninventoried' && isInventoried) return false;
+                if (activeHomeFilter === 'matched' && (!isInventoried || diff !== 0)) return false;
+                if (activeHomeFilter === 'shortage' && (!isInventoried || diff >= 0)) return false;
+                if (activeHomeFilter === 'surplus' && (!isInventoried || diff <= 0)) return false;
+
+                return true;
+            });
+
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">لا توجد أصناف مطابقة</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">لا توجد أصناف مطابقة للعرض الحالي</div>`;
                 return;
             }
 
@@ -826,13 +871,22 @@
             currentLang = currentLang === 'ar' ? 'en' : 'ar';
             document.documentElement.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
             document.documentElement.setAttribute('lang', currentLang);
-            document.getElementById('lang-btn-text').textContent = currentLang === 'ar' ? 'EN' : 'AR';
+            document.getElementById('lang-bin-text').textContent = currentLang === 'ar' ? 'EN' : 'AR';
             document.getElementById('app-title').innerHTML = currentLang === 'ar' ? '<i class="fa-solid fa-boxes-stacked"></i> جرد المحل' : '<i class="fa-solid fa-boxes-stacked"></i> Store Inventory';
         }
 
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('service-worker.js').catch(err => console.log(err));
+                const swCode = `
+                    self.addEventListener('fetch', function (event) {
+                        event.respondWith(fetch(event.request).catch(function() {
+                            return caches.match(event.request);
+                        }));
+                    });
+                `;
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log(err));
             }
         }
     </script>
