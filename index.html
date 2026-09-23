@@ -1,220 +1,840 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جرد المحل - Shop Inventory</title>
+    <title>جرد المحل - Store Inventory PWA</title>
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#3b82f6">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4f46e5">
-    <link rel="stylesheet" href="style.css">
-    <!-- FontAwesome icons -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <!-- Tailwind CSS Stable CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#111827',
+                            card: '#1f2937',
+                            border: '#374151'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Cairo) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        * { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
+    </style>
 </head>
-<body>
-    <div id="app">
-        <!-- شريط العلوي (Header) -->
-        <header class="app-header">
-            <div class="header-title">
-                <h1 id="page-title">جرد المحل</h1>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen pb-24">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 id="app-title" class="text-xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                <i class="fa-solid fa-boxes-stacked"></i> جرد المحل
+            </h1>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300" title="تبديل الوضع الداكن">
+                    <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+                <button onclick="toggleLanguage()" class="px-3 py-1 text-sm font-semibold rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">
+                    <span id="lang-btn-text">EN</span>
+                </button>
+                <button onclick="openSettingsModal()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300" title="الإعدادات والنسخ الاحتياطي">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
             </div>
-            <div class="header-actions">
-                <button id="lang-toggle-btn" class="icon-btn" title="تغيير اللغة"><i class="fa-solid fa-globe"></i></button>
-                <button id="theme-toggle-btn" class="icon-btn" title="الوضع الداكن"><i class="fa-solid fa-moon"></i></button>
-                <button id="settings-btn" class="icon-btn" title="الإعدادات"><i class="fa-solid fa-gear"></i></button>
-            </div>
-        </header>
-
-        <!-- المحتوى الرئيسي -->
-        <main class="app-main">
-            <!-- صفحة الرئيسية / لوحة التحكم والأصناف -->
-            <section id="view-home" class="view active">
-                <div class="stats-container">
-                    <div class="stat-card">
-                        <span class="stat-num" id="stat-total">0</span>
-                        <span class="stat-label" data-i18n="total_items">إجمالي الأصناف</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-num" id="stat-counted">0</span>
-                        <span class="stat-label" data-i18n="counted_items">تم جردها</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-num" id="stat-uncounted">0</span>
-                        <span class="stat-label" data-i18n="uncounted_items">لم تُجرد</span>
-                    </div>
-                    <div class="stat-card warning">
-                        <span class="stat-num" id="stat-shortage">0</span>
-                        <span class="stat-label" data-i18n="shortage_items">نقص</span>
-                    </div>
-                    <div class="stat-card success">
-                        <span class="stat-num" id="stat-surplus">0</span>
-                        <span class="stat-label" data-i18n="surplus_items">زيادة</span>
-                    </div>
-                </div>
-
-                <div class="search-filter-bar">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="home-search" placeholder="بحث سريع عن صنف..." data-i18n-placeholder="search_placeholder">
-                    </div>
-                </div>
-
-                <div class="items-list-container">
-                    <div id="home-items-list" class="items-grid">
-                        <!-- تضاف البطاقات هنا برمجياً -->
-                    </div>
-                    <div id="home-empty" class="empty-state" style="display: none;">
-                        <i class="fa-solid fa-boxes-stacked"></i>
-                        <p data-i18n="no_items_found">لا توجد أصناف مضافة حالياً</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- صفحة إدارة الأصناف -->
-            <section id="view-products" class="view">
-                <div class="search-filter-bar">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="products-search" placeholder="بحث في الأصناف..." data-i18n-placeholder="search_products">
-                    </div>
-                    <button class="btn-primary" id="add-product-inline-btn"><i class="fa-solid fa-plus"></i> <span data-i18n="add_item">إضافة صنف</span></button>
-                </div>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th data-i18n="item_name">اسم الصنف</th>
-                                <th data-i18n="item_qty">الكمية المسجلة</th>
-                                <th data-i18n="item_unit">الوحدة</th>
-                                <th data-i18n="actions">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="products-table-body">
-                            <!-- الصفوف -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- صفحة نظام الجرد (شاشة العد السريع) -->
-            <section id="view-inventory" class="view">
-                <div class="inventory-controls">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="inventory-search" placeholder="بحث لجرد الصنف..." data-i18n-placeholder="search_inventory">
-                    </div>
-                    <div class="filter-chips">
-                        <button class="chip active" data-filter="all" data-i18n="filter_all">الكل</button>
-                        <button class="chip" data-filter="counted" data-i18n="filter_counted">تم الجرد</button>
-                        <button class="chip" data-filter="uncounted" data-i18n="filter_uncounted">لم يُجرد</button>
-                        <button class="chip" data-filter="shortage" data-i18n="filter_shortage">نقص</button>
-                        <button class="chip" data-filter="surplus" data-i18n="filter_surplus">زيادة</button>
-                        <button class="chip" data-filter="matched" data-i18n="filter_matched">مطابق</button>
-                    </div>
-                </div>
-
-                <div class="inventory-list" id="inventory-items-list">
-                    <!-- عناصر الجرد التفاعلية السريعة -->
-                </div>
-
-                <div class="inventory-footer-action">
-                    <button id="save-inventory-session-btn" class="btn-success-lg"><i class="fa-solid fa-floppy-disk"></i> <span data-i18n="save_inventory">حفظ الجرد النهائي</span></button>
-                </div>
-            </section>
-
-            <!-- صفحة سجل الجرد -->
-            <section id="view-history" class="view">
-                <div id="history-list" class="history-list">
-                    <!-- سجلات الجرد -->
-                </div>
-                <div id="history-empty" class="empty-state" style="display: none;">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    <p data-i18n="no_history">لا يوجد سجل عمليات جرد سابقة</p>
-                </div>
-            </section>
-
-            <!-- صفحة الإعدادات والنسخ الاحتياطي -->
-            <section id="view-settings" class="view">
-                <div class="settings-card">
-                    <h3 data-i18n="backup_restore">النسخ الاحتياطي والاستعادة</h3>
-                    <p data-i18n="backup_desc">حفظ نسخة احتياطية من جميع الأصناف والسجلات واستعادتها في أي وقت.</p>
-                    <div class="settings-actions">
-                        <button id="export-backup-btn" class="btn-outline"><i class="fa-solid fa-download"></i> <span data-i18n="export_btn">تصدير نسخة احتياطية (JSON)</span></button>
-                        <label for="import-file-input" class="btn-outline file-label">
-                            <i class="fa-solid fa-upload"></i> <span data-i18n="import_btn">استيراد نسخة احتياطية</span>
-                        </label>
-                        <input type="file" id="import-file-input" accept=".json" style="display: none;">
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- زر FAB عائم -->
-        <div class="fab-container">
-            <div id="fab-menu" class="fab-menu">
-                <button class="fab-item" data-action="add-product"><i class="fa-solid fa-plus"></i> <span data-i18n="add_item">إضافة صنف</span></button>
-                <button class="fab-item" data-action="start-inventory"><i class="fa-solid fa-clipboard-check"></i> <span data-i18n="start_inventory">بدء الجرد</span></button>
-                <button class="fab-item" data-action="view-products"><i class="fa-solid fa-boxes-stacked"></i> <span data-i18n="items_list">الأصناف</span></button>
-                <button class="fab-item" data-action="view-history"><i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="inventory_history">سجل الجرد</span></button>
-            </div>
-            <button id="fab-main" class="fab-main" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
         </div>
+    </header>
 
-        <!-- شريط التنقل السفلي السريع -->
-        <nav class="app-nav">
-            <button class="nav-item active" data-target="view-home"><i class="fa-solid fa-house"></i><span data-i18n="nav_home">الرئيسية</span></button>
-            <button class="nav-item" data-target="view-inventory"><i class="fa-solid fa-clipboard-check"></i><span data-i18n="nav_inventory">الجرد</span></button>
-            <button class="nav-item" data-target="view-products"><i class="fa-solid fa-boxes-stacked"></i><span data-i18n="nav_products">الأصناف</span></button>
-            <button class="nav-item" data-target="view-history"><i class="fa-solid fa-clock-rotate-left"></i><span data-i18n="nav_history">السجل</span></button>
-        </nav>
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-4 py-4">
+
+        <!-- 1. HOME VIEW (الرئيسية) -->
+        <section id="view-home" class="space-y-4">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm space-y-3">
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute right-3.5 top-3.5 text-gray-400"></i>
+                    <input type="text" id="home-search" oninput="filterHomeProducts()" placeholder="بحث سريع عن صنف..." class="w-full pr-10 pl-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-2 text-center">
+                    <div class="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-xl">
+                        <span class="block text-xs text-blue-600 dark:text-blue-400 font-medium">الإجمالي</span>
+                        <span id="stat-total" class="text-lg font-bold">0</span>
+                    </div>
+                    <div class="bg-green-50 dark:bg-green-900/30 p-2 rounded-xl">
+                        <span class="block text-xs text-green-600 dark:text-green-400 font-medium">تم الجرد</span>
+                        <span id="stat-inventoried" class="text-lg font-bold">0</span>
+                    </div>
+                    <div class="bg-orange-50 dark:bg-orange-900/30 p-2 rounded-xl">
+                        <span class="block text-xs text-orange-600 dark:text-orange-400 font-medium">غير مجرود</span>
+                        <span id="stat-uninventoried" class="text-lg font-bold">0</span>
+                    </div>
+                    <div class="bg-purple-50 dark:bg-purple-900/30 p-2 rounded-xl">
+                        <span class="block text-xs text-purple-600 dark:text-purple-400 font-medium">مطابق</span>
+                        <span id="stat-matched" class="text-lg font-bold">0</span>
+                    </div>
+                    <div class="bg-red-50 dark:bg-red-900/30 p-2 rounded-xl">
+                        <span class="block text-xs text-red-600 dark:text-red-400 font-medium">نقص</span>
+                        <span id="stat-shortage" class="text-lg font-bold">0</span>
+                    </div>
+                    <div class="bg-amber-50 dark:bg-amber-900/30 p-2 rounded-xl">
+                        <span class="block text-xs text-amber-600 dark:text-amber-400 font-medium">زيادة</span>
+                        <span id="stat-surplus" class="text-lg font-bold">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-2" id="home-products-list"></div>
+        </section>
+
+        <!-- 4. PRODUCTS MANAGEMENT VIEW (صفحة الأصناف) -->
+        <section id="view-products" class="space-y-4 hidden">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm flex items-center justify-between gap-2">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-search absolute right-3.5 top-3.5 text-gray-400"></i>
+                    <input type="text" id="products-search" oninput="renderProductsManagement()" placeholder="بحث في الأصناف..." class="w-full pr-10 pl-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="openProductModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-plus"></i> إضافة صنف
+                </button>
+            </div>
+            <div class="space-y-2" id="management-products-list"></div>
+        </section>
+
+        <!-- 5, 6 & 7. INVENTORY SESSION VIEW (شاشة الجرد) -->
+        <section id="view-inventory" class="space-y-4 hidden">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm space-y-3 sticky top-16 z-20">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-clipboard-list text-blue-500"></i> جلسة الجرد الحالية</h2>
+                    <button onclick="finishInventory()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-medium text-sm shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> حفظ الجرد
+                    </button>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="inv-search" oninput="renderInventoryItems()" placeholder="بحث في الجرد..." class="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    <select id="inv-filter" onchange="renderInventoryItems()" class="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        <option value="all">الكل</option>
+                        <option value="inventoried">تم الجرد</option>
+                        <option value="uninventoried">لم يتم الجرد</option>
+                        <option value="matched">مطابق</option>
+                        <option value="shortage">نقص</option>
+                        <option value="surplus">زيادة</option>
+                    </select>
+                </div>
+            </div>
+            <div class="space-y-2" id="inventory-items-list"></div>
+        </section>
+
+        <!-- 10. INVENTORY HISTORY VIEW (سجل الجرد) -->
+        <section id="view-history" class="space-y-4 hidden">
+            <h2 class="text-lg font-bold px-1"><i class="fa-solid fa-clock-rotate-left text-blue-500"></i> سجل عمليات الجرد السابقة</h2>
+            <div class="space-y-3" id="history-list"></div>
+        </section>
+
+    </main>
+
+    <!-- 2. FLOATING ACTION BUTTON (الزر العائم) -->
+    <div class="fixed bottom-16 left-6 z-40">
+        <div id="fab-menu" class="hidden absolute bottom-16 left-0 bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-2 w-48 border border-gray-100 dark:border-gray-700 space-y-1">
+            <button onclick="openProductModal(); toggleFab();" class="w-full text-right px-3 py-2 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-xl text-sm flex items-center gap-3">
+                <i class="fa-solid fa-plus text-blue-500 w-5"></i> إضافة صنف
+            </button>
+            <button onclick="startInventorySession(); toggleFab();" class="w-full text-right px-3 py-2 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-xl text-sm flex items-center gap-3">
+                <i class="fa-solid fa-clipboard-check text-green-500 w-5"></i> بدء الجرد
+            </button>
+            <button onclick="switchView('products'); toggleFab();" class="w-full text-right px-3 py-2 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-xl text-sm flex items-center gap-3">
+                <i class="fa-solid fa-boxes-stacked text-purple-500 w-5"></i> الأصناف
+            </button>
+            <button onclick="switchView('history'); toggleFab();" class="w-full text-right px-3 py-2 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-xl text-sm flex items-center gap-3">
+                <i class="fa-solid fa-file-lines text-amber-500 w-5"></i> سجل الجرد
+            </button>
+        </div>
+        <button onclick="toggleFab()" class="bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-xl transition-transform active:scale-95">
+            <i id="fab-icon" class="fa-solid fa-plus"></i>
+        </button>
     </div>
 
-    <!-- نافذة منبثقة (Modal) لإضافة/تعديل صنف -->
-    <div id="product-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-title" data-i18n="add_new_item">إضافة صنف جديد</h3>
-                <button class="close-modal">&times;</button>
+    <!-- BOTTOM NAVIGATION BAR -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-30 flex justify-around py-2 px-1 shadow-lg">
+        <button onclick="switchView('home')" id="nav-home" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs gap-1 px-3 py-1 font-bold">
+            <i class="fa-solid fa-house text-lg"></i> الرئيسية
+        </button>
+        <button onclick="switchView('products')" id="nav-products" class="flex flex-col items-center text-gray-500 dark:text-gray-400 text-xs gap-1 px-3 py-1">
+            <i class="fa-solid fa-boxes-stacked text-lg"></i> الأصناف
+        </button>
+        <button onclick="startInventorySession()" id="nav-inventory" class="flex flex-col items-center text-gray-500 dark:text-gray-400 text-xs gap-1 px-3 py-1">
+            <i class="fa-solid fa-clipboard-check text-lg"></i> الجرد
+        </button>
+        <button onclick="switchView('history')" id="nav-history" class="flex flex-col items-center text-gray-500 dark:text-gray-400 text-xs gap-1 px-3 py-1">
+            <i class="fa-solid fa-clock-rotate-left text-lg"></i> السجل
+        </button>
+    </nav>
+
+    <!-- 3. PRODUCT MODAL -->
+    <div id="product-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white dark:bg-gray-800 w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 id="product-modal-title" class="text-lg font-bold">إضافة صنف جديد</h3>
+                <button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form id="product-form">
+            <form id="product-form" onsubmit="saveProduct(event)" class="space-y-3">
                 <input type="hidden" id="product-id">
-                <div class="form-group">
-                    <label data-i18n="item_name">اسم الصنف</label>
-                    <input type="text" id="product-name" required placeholder="أدخل اسم الصنف...">
+                <div>
+                    <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">اسم الصنف *</label>
+                    <input type="text" id="p-name" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div class="form-group">
-                    <label data-i18n="item_qty">الكمية المسجلة</label>
-                    <input type="number" id="product-quantity" step="any" min="0" value="0" required>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">الكمية الحالية</label>
+                        <input type="number" id="p-quantity" value="0" min="0" step="any" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">الوحدة</label>
+                        <select id="p-unit-select" onchange="checkCustomUnit(this)" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="حبة">حبة</option>
+                            <option value="كرتون">كرتون</option>
+                            <option value="علبة">علبة</option>
+                            <option value="كيس">كيس</option>
+                            <option value="كيلو">كيلو</option>
+                            <option value="لتر">لتر</option>
+                            <option value="حزمة">حزمة</option>
+                            <option value="أخرى">أخرى...</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label data-i18n="item_unit">الوحدة</label>
-                    <select id="product-unit-select">
-                        <option value="حبة">حبة</option>
-                        <option value="كرتون">كرتون</option>
-                        <option value="علبة">علبة</option>
-                        <option value="كيس">كيس</option>
-                        <option value="كيلو">كيلو</option>
-                        <option value="لتر">لتر</option>
-                        <option value="حزمة">حزمة</option>
-                        <option value="أخرى" data-i18n="unit_other">أخرى</option>
-                    </select>
-                    <input type="text" id="product-unit-custom" placeholder="اكتب الوحدة هنا..." style="display: none; margin-top: 8px;">
+                <div id="custom-unit-box" class="hidden">
+                    <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">اكتب الوحدة الجديدة</label>
+                    <input type="text" id="p-custom-unit" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-secondary close-modal" data-i18n="cancel">إلغاء</button>
-                    <button type="submit" class="btn-primary" data-i18n="save">حفظ</button>
-                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium shadow-sm transition-colors mt-2">حفظ الصنف</button>
             </form>
         </div>
     </div>
 
-    <!-- نافذة تفاصيل الجرد أو تأكيد الحفظ -->
-    <div id="generic-modal" class="modal">
-        <div class="modal-content" id="generic-modal-body">
-            <!-- محتوى ديناميكي -->
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 w-full sm:max-w-md rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold">الإعدادات والنسخ الاحتياطي</h3>
+                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-4 pt-2">
+                <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl space-y-2">
+                    <h4 class="font-semibold text-sm">النسخ الاحتياطي للبيانات</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">تصدير واستيراد بيانات الأصناف وعمليات الجرد كملف JSON.</p>
+                    <div class="flex gap-2 pt-1">
+                        <button onclick="exportBackup()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-download"></i> تصدير
+                        </button>
+                        <label class="flex-1 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-upload"></i> استيراد
+                            <input type="file" id="import-file" accept=".json" onchange="importBackup(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- HISTORY DETAILS MODAL -->
+    <div id="history-details-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 w-full sm:max-w-2xl max-h-[85vh] flex flex-col rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 id="history-modal-title" class="text-lg font-bold">تفاصيل عملية الجرد</h3>
+                <button onclick="closeHistoryDetailsModal()" class="text-gray-400 hover:text-gray-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="overflow-y-auto space-y-2 flex-1 pr-1" id="history-details-list"></div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const DB_NAME = "StoreInventoryDB";
+        const DB_VERSION = 1;
+        let db = null;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains("products")) {
+                        database.createObjectStore("products", { keyPath: "id", autoIncrement: true });
+                    }
+                    if (!database.objectStoreNames.contains("inventorySessions")) {
+                        database.createObjectStore("inventorySessions", { keyPath: "id", autoIncrement: true });
+                    }
+                    if (!database.objectStoreNames.contains("inventoryItems")) {
+                        database.createObjectStore("inventoryItems", { keyPath: "id", autoIncrement: true });
+                    }
+                };
+            });
+        }
+
+        async function dbTransaction(storeName, mode, callback) {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(storeName, mode);
+                const store = transaction.objectStore(storeName);
+                const request = callback(store);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        let currentLang = 'ar';
+        let currentView = 'home';
+        let tempInventoryData = {};
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initDB();
+            loadSettings();
+            await loadHomeData();
+            registerServiceWorker();
+        });
+
+        function switchView(viewId) {
+            currentView = viewId;
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            
+            ['home', 'products', 'inventory', 'history'].forEach(v => {
+                const btn = document.getElementById(`nav-${v}`);
+                if(btn) {
+                    btn.classList.remove('text-blue-600', 'dark:text-blue-400', 'font-bold');
+                    btn.classList.add('text-gray-500', 'dark:text-gray-400');
+                }
+            });
+            const activeNav = document.getElementById(`nav-${viewId}`);
+            if(activeNav) {
+                activeNav.classList.remove('text-gray-500', 'dark:text-gray-400');
+                activeNav.classList.add('text-blue-600', 'dark:text-blue-400', 'font-bold');
+            }
+
+            if(viewId === 'home') loadHomeData();
+            if(viewId === 'products') renderProductsManagement();
+            if(viewId === 'history') renderHistoryList();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleFab() {
+            const menu = document.getElementById('fab-menu');
+            const icon = document.getElementById('fab-icon');
+            menu.classList.toggle('hidden');
+            icon.classList.toggle('rotate-45');
+        }
+
+        async function loadHomeData() {
+            const products = await dbTransaction('products', 'readonly', store => store.getAll());
+            const sessions = await dbTransaction('inventorySessions', 'readonly', store => store.getAll());
+            const latestSession = sessions.length > 0 ? sessions[sessions.length - 1] : null;
+            let sessionItemsMap = {};
+            if (latestSession) {
+                const items = await dbTransaction('inventoryItems', 'readonly', store => store.getAll());
+                items.filter(i => i.inventoryId === latestSession.id).forEach(i => {
+                    sessionItemsMap[i.productId] = i;
+                });
+            }
+
+            let total = products.length;
+            let inventoried = 0;
+            let matched = 0, shortage = 0, surplus = 0;
+
+            products.forEach(p => {
+                const item = sessionItemsMap[p.id];
+                if (item && item.actualQuantity !== null && item.actualQuantity !== undefined) {
+                    inventoried++;
+                    if (item.difference === 0) matched++;
+                    else if (item.difference < 0) shortage++;
+                    else if (item.difference > 0) surplus++;
+                }
+            });
+            let uninventoried = total - inventoried;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-inventoried').textContent = inventoried;
+            document.getElementById('stat-uninventoried').textContent = uninventoried;
+            document.getElementById('stat-matched').textContent = matched;
+            document.getElementById('stat-shortage').textContent = shortage;
+            document.getElementById('stat-surplus').textContent = surplus;
+
+            renderHomeProducts(products, sessionItemsMap);
+        }
+
+        function renderHomeProducts(products, sessionItemsMap) {
+            const container = document.getElementById('home-products-list');
+            const searchTerm = document.getElementById('home-search').value.toLowerCase();
+            container.innerHTML = '';
+
+            const filtered = products.filter(p => p.name.toLowerCase().includes(searchTerm));
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">لا توجد أصناف مطابقة</div>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                const item = sessionItemsMap[p.id];
+                let statusText = 'لم يتم الجرد';
+                let statusClass = 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300';
+                let diffText = '-';
+
+                if (item && item.actualQuantity !== null && item.actualQuantity !== undefined) {
+                    diffText = item.difference > 0 ? `+${item.difference}` : item.difference;
+                    if (item.difference === 0) {
+                        statusText = 'مطابق';
+                        statusClass = 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300';
+                    } else if (item.difference < 0) {
+                        statusText = `نقص ${Math.abs(item.difference)}`;
+                        statusClass = 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
+                    } else {
+                        statusText = `زيادة ${item.difference}`;
+                        statusClass = 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
+                    }
+                }
+
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-gray-800 p-3.5 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-2">
+                        <div class="space-y-0.5">
+                            <h3 class="font-bold text-sm">${p.name}</h3>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 flex gap-3">
+                                <span>المسجل: <b>${p.quantity} ${p.unit}</b></span>
+                                <span>الموجود: <b>${item && item.actualQuantity !== null ? item.actualQuantity : '-'}</b></span>
+                                <span>الفرق: <b>${diffText}</b></span>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-xl text-xs font-semibold ${statusClass}">${statusText}</span>
+                    </div>
+                `;
+            });
+        }
+
+        function filterHomeProducts() { loadHomeData(); }
+
+        function openProductModal(product = null) {
+            document.getElementById('product-form').reset();
+            document.getElementById('custom-unit-box').classList.add('hidden');
+            if (product) {
+                document.getElementById('product-modal-title').textContent = 'تعديل صنف';
+                document.getElementById('product-id').value = product.id;
+                document.getElementById('p-name').value = product.name;
+                document.getElementById('p-quantity').value = product.quantity;
+                const unitSelect = document.getElementById('p-unit-select');
+                if ([...unitSelect.options].some(o => o.value === product.unit)) {
+                    unitSelect.value = product.unit;
+                } else {
+                    unitSelect.value = 'أخرى';
+                    document.getElementById('custom-unit-box').classList.remove('hidden');
+                    document.getElementById('p-custom-unit').value = product.unit;
+                }
+            } else {
+                document.getElementById('product-modal-title').textContent = 'إضافة صنف جديد';
+                document.getElementById('product-id').value = '';
+            }
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        function closeProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
+
+        function checkCustomUnit(select) {
+            const customBox = document.getElementById('custom-unit-box');
+            if (select.value === 'أخرى') {
+                customBox.classList.remove('hidden');
+                document.getElementById('p-custom-unit').required = true;
+            } else {
+                customBox.classList.add('hidden');
+                document.getElementById('p-custom-unit').required = false;
+            }
+        }
+
+        async function saveProduct(event) {
+            event.preventDefault();
+            const id = document.getElementById('product-id').value;
+            const name = document.getElementById('p-name').value.trim();
+            const quantity = parseFloat(document.getElementById('p-quantity').value) || 0;
+            let unit = document.getElementById('p-unit-select').value;
+            if (unit === 'أخرى') {
+                unit = document.getElementById('p-custom-unit').value.trim() || 'أخرى';
+            }
+
+            const products = await dbTransaction('products', 'readonly', store => store.getAll());
+            const existing = products.find(p => p.name.toLowerCase() === name.toLowerCase() && (!id || p.id != id));
+            if (existing) {
+                alert('هذا الصنف موجود مسبقاً في المخزون!');
+                return;
+            }
+
+            const now = new Date().toISOString();
+            if (id) {
+                const product = await dbTransaction('products', 'readonly', store => store.get(parseInt(id)));
+                product.name = name;
+                product.quantity = quantity;
+                product.unit = unit;
+                product.updatedAt = now;
+                await dbTransaction('products', 'readwrite', store => store.put(product));
+            } else {
+                await dbTransaction('products', 'readwrite', store => store.add({
+                    name, quantity, unit, createdAt: now, updatedAt: now
+                }));
+            }
+
+            closeProductModal();
+            if(currentView === 'products') renderProductsManagement();
+            else loadHomeData();
+        }
+
+        async function renderProductsManagement() {
+            const products = await dbTransaction('products', 'readonly', store => store.getAll());
+            const searchTerm = document.getElementById('products-search').value.toLowerCase();
+            const container = document.getElementById('management-products-list');
+            container.innerHTML = '';
+
+            const filtered = products.filter(p => p.name.toLowerCase().includes(searchTerm));
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">لا توجد أصناف</div>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-gray-800 p-3.5 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-2">
+                        <div>
+                            <h3 class="font-bold text-sm">${p.name}</h3>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">الكمية: ${p.quantity} ${p.unit}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick='openProductModelEdit(${JSON.stringify(p)})' class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-xl" title="تعديل"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteProduct(${p.id})" class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-gray-700 rounded-xl" title="حذف"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openProductModelEdit(product) { openProductModal(product); }
+
+        async function deleteProduct(id) {
+            if (confirm('هل أنت متأكد من حذف هذا الصنف؟')) {
+                await dbTransaction('products', 'readwrite', store => store.delete(id));
+                renderProductsManagement();
+            }
+        }
+
+        async function startInventorySession() {
+            const products = await dbTransaction('products', 'readonly', store => store.getAll());
+            if (products.length === 0) {
+                alert('الرجاء إضافة أصناف للمخزون أولاً قبل بدء الجرد.');
+                switchView('products');
+                return;
+            }
+
+            tempInventoryData = {};
+            products.forEach(p => { tempInventoryData[p.id] = null; });
+
+            switchView('inventory');
+            renderInventoryItems();
+        }
+
+        async function renderInventoryItems() {
+            const products = await dbTransaction('products', 'readonly', store => store.getAll());
+            const searchTerm = document.getElementById('inv-search').value.toLowerCase();
+            const filterType = document.getElementById('inv-filter').value;
+            const container = document.getElementById('inventory-items-list');
+            container.innerHTML = '';
+
+            const filtered = products.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(searchTerm);
+                if (!matchesSearch) return false;
+
+                const actual = tempInventoryData[p.id];
+                const isInventoried = actual !== null && actual !== undefined;
+                const diff = isInventoried ? actual - p.quantity : 0;
+
+                if (filterType === 'inventoried' && !isInventoried) return false;
+                if (filterType === 'uninventoried' && isInventoried) return false;
+                if (filterType === 'matched' && (!isInventoried || diff !== 0)) return false;
+                if (filterType === 'shortage' && (!isInventoried || diff >= 0)) return false;
+                if (filterType === 'surplus' && (!isInventoried || diff <= 0)) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">لا توجد أصناف مطابقة للبحث أو الفلتر</div>`;
+                return;
+            }
+
+            filtered.forEach((p, index) => {
+                const actual = tempInventoryData[p.id];
+                const isInventoried = actual !== null && actual !== undefined;
+                const diff = isInventoried ? actual - p.quantity : 0;
+                
+                let statusText = 'لم يتم الجرد';
+                let statusClass = 'text-gray-400';
+                if (isInventoried) {
+                    if (diff === 0) { statusText = 'مطابق'; statusClass = 'text-purple-600 dark:text-purple-400'; }
+                    else if (diff < 0) { statusText = `نقص ${Math.abs(diff)}`; statusClass = 'text-red-600 dark:text-red-400'; }
+                    else { statusText = `زيادة ${diff}`; statusClass = 'text-amber-600 dark:text-amber-400'; }
+                }
+
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-gray-800 p-3.5 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm">${p.name}</h3>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 flex gap-2 pt-0.5">
+                                <span>المسجل: ${p.quantity} ${p.unit}</span>
+                                <span class="font-semibold ${statusClass}">(${statusText})</span>
+                            </div>
+                        </div>
+                        <div class="w-32">
+                            <input type="number" step="any" inputmode="numeric" placeholder="الموجود" 
+                                value="${isInventoried ? actual : ''}" 
+                                oninput="updateTempInventory(${p.id}, this.value)" 
+                                onkeydown="handleInvKeydown(event, ${index})"
+                                class="inv-input w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-center font-bold">
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function updateTempInventory(productId, value) {
+            tempInventoryData[productId] = value === '' ? null : parseFloat(value);
+        }
+
+        function handleInvKeydown(event, currentIndex) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const inputs = document.querySelectorAll('.inv-input');
+                if (currentIndex + 1 < inputs.length) {
+                    inputs[currentIndex + 1].focus();
+                    inputs[currentIndex + 1].select();
+                }
+            }
+        }
+
+        async function finishInventory() {
+            const products = await dbTransaction('products', 'readonly', store => store.getAll());
+            let total = products.length;
+            let inventoried = 0;
+            let matched = 0, shortage = 0, surplus = 0;
+
+            products.forEach(p => {
+                const actual = tempInventoryData[p.id];
+                if (actual !== null && actual !== undefined) {
+                    inventoried++;
+                    const diff = actual - p.quantity;
+                    if (diff === 0) matched++;
+                    else if (diff < 0) shortage++;
+                    else surplus++;
+                }
+            });
+
+            const confirmMsg = `ملخص الجرد:\n- إجمالي الأصناف: ${total}\n- تم جردها: ${inventoried}\n- مطابق: ${matched}\n- نقص: ${shortage}\n- زيادة: ${surplus}\n\nهل تريد تأكيد وحفظ الجرد؟`;
+            if (!confirm(confirmMsg)) return;
+
+            const now = new Date().toISOString();
+            const sessionId = await dbTransaction('inventorySessions', 'readwrite', store => store.add({
+                date: now,
+                total, inventoried, matched, shortage, surplus
+            }));
+
+            for (const p of products) {
+                const actual = tempInventoryData[p.id];
+                if (actual !== null && actual !== undefined) {
+                    const diff = actual - p.quantity;
+                    let status = 'matched';
+                    if (diff < 0) status = 'shortage';
+                    if (diff > 0) status = 'surplus';
+
+                    await dbTransaction('inventoryItems', 'readwrite', store => store.add({
+                        inventoryId: sessionId,
+                        productId: p.id,
+                        productName: p.name,
+                        expectedQuantity: p.quantity,
+                        actualQuantity: actual,
+                        difference: diff,
+                        status
+                    }));
+                }
+            }
+
+            alert('تم حفظ الجرد بنجاح في السجل!');
+            switchView('history');
+        }
+
+        async function renderHistoryList() {
+            const sessions = await dbTransaction('inventorySessions', 'readonly', store => store.getAll());
+            const container = document.getElementById('history-list');
+            container.innerHTML = '';
+
+            if (sessions.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">لا توجد عمليات جرد سابقة</div>`;
+                return;
+            }
+
+            sessions.reverse().forEach(s => {
+                const dateObj = new Date(s.date);
+                const dateStr = dateObj.toLocaleDateString('ar-SA');
+                const timeStr = dateObj.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-xs border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-2">
+                        <div class="cursor-pointer flex-1" onclick="openHistoryDetails(${s.id})">
+                            <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400">جرد رقم #${s.id}</h3>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 flex gap-3 pt-1">
+                                <span><i class="fa-regular fa-calendar"></i> ${dateStr} - ${timeStr}</span>
+                                <span>الأصناف: ${s.inventoried}/${s.total}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="openHistoryDetails(${s.id})" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-xl" title="التفاصيل"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="deleteInventorySession(${s.id})" class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-gray-700 rounded-xl" title="حذف الجرد"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function openHistoryDetails(sessionId) {
+            const sessions = await dbTransaction('inventorySessions', 'readonly', store => store.getAll());
+            const items = await dbTransaction('inventoryItems', 'readonly', store => store.getAll());
+            const sessionItems = items.filter(i => i.inventoryId === sessionId);
+
+            document.getElementById('history-modal-title').textContent = `تفاصيل جرد #${sessionId}`;
+            const container = document.getElementById('history-details-list');
+            container.innerHTML = '';
+
+            sessionItems.forEach(item => {
+                let diffText = item.difference > 0 ? `+${item.difference}` : item.difference;
+                container.innerHTML += `
+                    <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-xl flex justify-between items-center text-sm">
+                        <div>
+                            <h4 class="font-bold">${item.productName}</h4>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">المسجل: ${item.expectedQuantity} | الموجود: ${item.actualQuantity}</span>
+                        </div>
+                        <span class="font-bold ${item.difference === 0 ? 'text-purple-600' : item.difference < 0 ? 'text-red-600' : 'text-amber-600'}">الفرق: ${diffText}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('history-details-modal').classList.remove('hidden');
+        }
+
+        function closeHistoryDetailsModal() { document.getElementById('history-details-modal').classList.add('hidden'); }
+
+        async function deleteInventorySession(sessionId) {
+            if (confirm('هل أنت متأكد من حذف عملية الجرد هذه؟')) {
+                await dbTransaction('inventorySessions', 'readwrite', store => store.delete(sessionId));
+                const items = await dbTransaction('inventoryItems', 'readonly', store => store.getAll());
+                for (const item of items.filter(i => i.inventoryId === sessionId)) {
+                    await dbTransaction('inventoryItems', 'readwrite', store => store.delete(item.id));
+                }
+                renderHistoryList();
+            }
+        }
+
+        function openSettingsModal() { document.getElementById('settings-modal').classList.remove('hidden'); }
+        function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
+
+        async function exportBackup() {
+            const products = await dbTransaction('products', 'readonly', store => store.getAll());
+            const sessions = await dbTransaction('inventorySessions', 'readonly', store => store.getAll());
+            const items = await dbTransaction('inventoryItems', 'readonly', store => store.getAll());
+
+            const backupData = { products, sessions, items, exportDate: new Date().toISOString() };
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `inventory-backup-${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!confirm('تحذير: استيراد النسخة الاحتياطية سيستبدل البيانات الحالية. هل أنت متأكد؟')) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    await dbTransaction('products', 'readwrite', store => store.clear());
+                    await dbTransaction('inventorySessions', 'readwrite', store => store.clear());
+                    await dbTransaction('inventoryItems', 'readwrite', store => store.clear());
+
+                    if (data.products) {
+                        for (const p of data.products) await dbTransaction('products', 'readwrite', store => store.add(p));
+                    }
+                    if (data.sessions) {
+                        for (const s of data.sessions) await dbTransaction('inventorySessions', 'readwrite', store => store.add(s));
+                    }
+                    if (data.items) {
+                        for (const i of data.items) await dbTransaction('inventoryItems', 'readwrite', store => store.add(i));
+                    }
+
+                    alert('تم استعادة النسخة الاحتياطية بنجاح!');
+                    closeSettingsModal();
+                    loadHomeData();
+                } catch (err) {
+                    alert('ملف النسخة الاحتياطية غير صالح!');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                icon.className = 'fa-solid fa-moon text-lg';
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                icon.className = 'fa-solid fa-sun text-lg';
+            }
+        }
+
+        function loadSettings() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon').className = 'fa-solid fa-sun text-lg';
+            }
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            document.documentElement.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+            document.documentElement.setAttribute('lang', currentLang);
+            document.getElementById('lang-btn-text').textContent = currentLang === 'ar' ? 'EN' : 'AR';
+            document.getElementById('app-title').innerHTML = currentLang === 'ar' ? '<i class="fa-solid fa-boxes-stacked"></i> جرد المحل' : '<i class="fa-solid fa-boxes-stacked"></i> Store Inventory';
+        }
+
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('service-worker.js').catch(err => console.log(err));
+            }
+        }
+    </script>
 </body>
 </html>
-
